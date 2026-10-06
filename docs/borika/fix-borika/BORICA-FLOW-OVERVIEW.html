@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Плащания с карта през Борика — как работи системата</title>
+
+<!-- Външни библиотеки (директни линкове, нищо не се сваля локално) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+
+<style>
+  :root{
+    --ink:#1b2333; --ink-soft:#4a5568; --line:#e3e8f0; --bg:#f5f7fb; --card:#ffffff;
+    --brand:#4b53c8; --brand-2:#7a4fd0; --brand-soft:#eef0ff;
+    --ok:#1f9d55; --ok-soft:#e8f7ef; --warn:#b7791f; --warn-soft:#fdf6e3;
+    --bad:#c0392b; --bad-soft:#fdecea; --info:#1c6ea4; --info-soft:#e8f2fa;
+    --shadow:0 1px 2px rgba(20,30,60,.05),0 10px 30px rgba(20,30,60,.07);
+  }
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.65; overflow-x:hidden;
+  }
+  h1,h2,h3,h4{font-weight:800; letter-spacing:-.02em}
+  h2{font-size:1.65rem; margin-top:0}
+  h3{font-size:1.2rem; font-weight:700}
+  a{color:var(--brand)}
+  .wrap{max-width:1120px; margin:0 auto; padding:0 20px}
+
+  /* ── Hero ───────────────────────────────────────────── */
+  .hero{
+    background:linear-gradient(135deg,#2b2f6e 0%,#4b53c8 45%,#7a4fd0 100%);
+    color:#fff; padding:64px 0 96px; position:relative; overflow:hidden;
+  }
+  .hero::after{
+    content:""; position:absolute; inset:auto -10% -60% -10%; height:70%;
+    background:radial-gradient(60% 100% at 50% 0%, rgba(255,255,255,.16), transparent 70%);
+  }
+  .hero .kicker{
+    display:inline-flex; align-items:center; gap:8px; font-size:.82rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:.12em; background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.25); padding:6px 14px; border-radius:999px; margin-bottom:20px;
+  }
+  .hero h1{font-size:clamp(1.9rem,4vw,3rem); line-height:1.15; margin-bottom:16px}
+  .hero p.lead{color:rgba(255,255,255,.88); font-size:1.05rem; max-width:760px; margin:0}
+  .hero .meta{margin-top:26px; font-size:.88rem; color:rgba(255,255,255,.75)}
+
+  /* ── Stat cards ─────────────────────────────────────── */
+  .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-top:-56px; position:relative; z-index:2}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px 18px 16px; box-shadow:var(--shadow)}
+  .stat .num{font-size:1.9rem; font-weight:800; color:var(--brand); line-height:1}
+  .stat .lbl{font-size:.85rem; color:var(--ink-soft); margin-top:6px}
+
+  /* ── Sections ───────────────────────────────────────── */
+  section{padding:56px 0 8px}
+  .sec-head{display:flex; align-items:center; gap:12px; margin-bottom:8px}
+  .sec-num{
+    flex:0 0 auto; width:34px; height:34px; border-radius:10px; background:var(--brand-soft);
+    color:var(--brand); font-weight:800; display:grid; place-items:center; font-size:.95rem;
+  }
+  .sec-sub{color:var(--ink-soft); margin:0 0 26px; max-width:860px}
+
+  .card-soft{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px; box-shadow:var(--shadow)}
+  .grid-2{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px}
+  .grid-3{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px}
+
+  .badge-soft{display:inline-block; font-size:.74rem; font-weight:700; padding:3px 10px; border-radius:999px; letter-spacing:.02em}
+  .b-ok{background:var(--ok-soft); color:var(--ok)}
+  .b-bad{background:var(--bad-soft); color:var(--bad)}
+  .b-warn{background:var(--warn-soft); color:var(--warn)}
+  .b-info{background:var(--info-soft); color:var(--info)}
+  .b-neutral{background:#eef1f6; color:var(--ink-soft)}
+
+  /* ── Tables ─────────────────────────────────────────── */
+  .table-wrap{background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); overflow:hidden}
+  table.doc{width:100%; border-collapse:collapse; font-size:.92rem}
+  table.doc th{background:#f8fafd; text-align:left; font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); padding:12px 14px; border-bottom:1px solid var(--line); white-space:nowrap}
+  table.doc td{padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+  table.doc tr:last-child td{border-bottom:none}
+  table.doc tbody tr:hover{background:#fbfcfe}
+  .mono{font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace; font-size:.86em}
+
+  /* ── Code groups (1:1 flow) ─────────────────────────── */
+  .grp{background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); margin-bottom:16px; overflow:hidden}
+  .grp-head{display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:16px 20px; border-bottom:1px solid var(--line); background:#fafbff}
+  .grp-head .t{font-weight:800; font-size:1.05rem}
+  .grp-body{padding:4px 20px 18px}
+  .kv{display:grid; grid-template-columns:190px 1fr; gap:2px 16px; padding:10px 0; border-bottom:1px dashed var(--line)}
+  .kv:last-child{border-bottom:none}
+  .kv .k{font-weight:600; color:var(--ink-soft); font-size:.88rem}
+  .kv .v{font-size:.94rem}
+  @media(max-width:640px){ .kv{grid-template-columns:1fr; gap:0} .kv .k{margin-top:6px} }
+
+  /* ── Timeline ───────────────────────────────────────── */
+  .tl{position:relative; margin:8px 0 0 8px; padding-left:30px; border-left:2px solid var(--line)}
+  .tl-item{position:relative; padding:0 0 26px 4px}
+  .tl-item::before{
+    content:""; position:absolute; left:-39px; top:4px; width:16px; height:16px; border-radius:50%;
+    background:#fff; border:3px solid var(--brand);
+  }
+  .tl-item.warn::before{border-color:#d99a2b}
+  .tl-item.ok::before{border-color:var(--ok)}
+  .tl-item.bad::before{border-color:var(--bad)}
+  .tl-time{font-size:.8rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--brand)}
+  .tl-item.warn .tl-time{color:#b7791f}
+  .tl-item.ok .tl-time{color:var(--ok)}
+  .tl-item.bad .tl-time{color:var(--bad)}
+  .tl-title{font-weight:700; margin:2px 0 4px}
+
+  /* ── Mermaid boxes ──────────────────────────────────── */
+  .diagram{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:var(--shadow); overflow-x:auto}
+  .diagram .mermaid{min-width:520px}
+
+  /* ── Misc ───────────────────────────────────────────── */
+  .note{border-left:4px solid var(--info); background:var(--info-soft); padding:14px 18px; border-radius:0 12px 12px 0; margin:16px 0; font-size:.94rem}
+  .note.warn{border-color:#d99a2b; background:var(--warn-soft)}
+  .note.bad{border-color:var(--bad); background:var(--bad-soft)}
+  .note.ok{border-color:var(--ok); background:var(--ok-soft)}
+  .note b{display:block; margin-bottom:2px}
+  ul.tight li{margin-bottom:6px}
+  .legend{display:flex; flex-wrap:wrap; gap:14px; align-items:center; font-size:.86rem; color:var(--ink-soft); margin-bottom:14px}
+  .dot{width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px}
+
+  .nav-top{
+    position:sticky; top:0; z-index:50; background:rgba(255,255,255,.93); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-top .wrap{display:flex; gap:6px; align-items:center; overflow-x:auto; padding-top:10px; padding-bottom:10px}
+  .nav-top a{font-size:.84rem; font-weight:600; color:var(--ink-soft); text-decoration:none; padding:6px 11px; border-radius:8px; white-space:nowrap}
+  .nav-top a:hover{background:var(--brand-soft); color:var(--brand)}
+  .nav-top .brandmark{margin-right:8px; font-weight:800; color:var(--brand); white-space:nowrap}
+
+  footer{margin-top:64px; padding:34px 0 48px; border-top:1px solid var(--line); color:var(--ink-soft); font-size:.88rem}
+  .searchbar{display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap}
+  .searchbar input{
+    flex:1 1 260px; padding:11px 14px; border:1px solid var(--line); border-radius:10px;
+    font-size:.95rem; font-family:inherit; background:#fff;
+  }
+  .searchbar input:focus{outline:2px solid var(--brand); outline-offset:1px; border-color:transparent}
+  .btn-soft{
+    background:var(--brand); color:#fff; border:none; padding:10px 16px; border-radius:10px;
+    font-weight:600; font-size:.9rem; cursor:pointer;
+  }
+  .btn-soft.ghost{background:#fff; color:var(--brand); border:1px solid var(--line)}
+  @media print{
+    .nav-top,.btn-soft,.hero::after{display:none}
+    body{background:#fff}
+    .diagram,.grp,.table-wrap,.card-soft{box-shadow:none; break-inside:avoid}
+    section{padding:22px 0 0}
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ HERO ═══════════════════════════════════════════ -->
+<header class="hero">
+  <div class="wrap">
+    <span class="kicker"><i class="bi bi-credit-card-2-front"></i> e-stol.com · плащания с карта</span>
+    <h1>Плащанията през Борика — какво се случва с една поръчка от началото до края</h1>
+    <p class="lead">
+      Това е снимка на текущото състояние. Описано е какво прави системата днес, какво вижда родителят
+      на екрана, какви писма получава и какво остава в базата. Без код и без технически жаргон —
+      прост език за всеки, който трябва да знае как работи плащането.
+    </p>
+    <div class="meta">
+      <i class="bi bi-calendar3"></i> Направено на 6 октомври 2026 г. &nbsp;·&nbsp;
+      <i class="bi bi-shield-check"></i> Само четене — нищо в кода не е променяно &nbsp;·&nbsp;
+      <i class="bi bi-diagram-3"></i> Източник: код в <span class="mono">master</span> (версия 1.3.28) + документацията на Борика P-OM-41 v5.0
+    </div>
+  </div>
+</header>
+
+<nav class="nav-top">
+  <div class="wrap">
+    <span class="brandmark"><i class="bi bi-compass"></i> Бърз преход</span>
+    <a href="#nakratko">Накратко</a>
+    <a href="#potok">Пътят на плащането</a>
+    <a href="#kodove">Код по код</a>
+    <a href="#resheniya">Как се решава</a>
+    <a href="#vreme">Време и чакане</a>
+    <a href="#pisma">Писмата</a>
+    <a href="#ekrani">Екраните</a>
+    <a href="#baza">База</a>
+    <a href="#rechnik">Речник на кодовете</a>
+    <a href="#propuski">Пропуски</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="stats">
+    <div class="stat"><div class="num">3</div><div class="lbl">екрана вижда родителят при карта</div></div>
+    <div class="stat"><div class="num">8</div><div class="lbl">писма са свързани с плащане</div></div>
+    <div class="stat"><div class="num">6</div><div class="lbl">възможни статуса на плащането</div></div>
+    <div class="stat"><div class="num">24 ч</div><div class="lbl">толкова пази банката данните</div></div>
+    <div class="stat"><div class="num">15 мин</div><div class="lbl">„прозорецът“, в който отговорът е надежден</div></div>
+    <div class="stat"><div class="num">5 мин</div><div class="lbl">през колко питаме банката за статус</div></div>
+  </div>
+</div>
+
+<!-- ═══ 1. НАКРАТКО ════════════════════════════════════ -->
+<section id="nakratko">
+  <div class="wrap">
+    <div class="sec-head"><div class="sec-num">1</div><h2>Накратко — седем неща, които трябва да се знаят</h2></div>
+    <p class="sec-sub">Ако прочетете само този раздел, пак ще имате вярна представа как работи плащането с карта днес.</p>
+
+    <div class="grid-2">
+      <div class="card-soft">
+        <h3><i class="bi bi-1-circle text-primary"></i> Плащането минава извън нашия сайт</h3>
+        <p class="mb-0">Родителят не въвежда данни за картата в e-stol.com. Системата го прехвърля незабележимо
+        към защитената страница на Борика, там картодържателят въвежда картата и паролата, и след това го връща обратно при нас.
+        Данните за картата никога не влизат в нашата система.</p>
+      </div>
+      <div class="card-soft">
+        <h3><i class="bi bi-2-circle text-primary"></i> Резултатът се разчита по два кода</h3>
+        <p class="mb-0">Банката връща код за действие (ACTION) и код за резултат (RC). Успех има само когато
+        ACTION е <span class="mono">0</span> <b>и</b> RC е <span class="mono">00</span>. Всяка друга комбинация означава
+        отказ, чакане или неяснота — никога „може би успех“.</p>
+      </div>
+      <div class="card-soft">
+        <h3><i class="bi bi-3-circle text-primary"></i> Успехът стига до родителя по два канала</h3>
+        <p class="mb-0">Веднага след като системата запише „Платено“, родителят вижда екран
+        „Плащането е успешно“ и получава писмо „Получено плащане за поръчка“. Това е истинското потвърждение за плащане.</p>
+      </div>
+      <div class="card-soft">
+        <h3><i class="bi bi-4-circle text-primary"></i> Има автоматична проверка при Борика</h3>
+        <p class="mb-0">Отделно от екрана, тихо на всеки 5 минути системата пита Борика „какво стана с тази поръчка?“
+        (заявка тип 90) и сама довършва плащането — потвърждава го или го отказва. Тази проверка <b>днес е изключена по подразбиране</b>
+        и трябва изрично да се включи (вж. <a href="#propuski">Пропуски</a>).</p>
+      </div>
+      <div class="card-soft">
+        <h3><i class="bi bi-5-circle text-primary"></i> Всичко се решава до 24 часа</h3>
+        <p class="mb-0">Борика пази данните за една поръчка 24 часа. След това нито може да се плати, нито да се провери.
+        Затова системата има 24-часово правило: ако за толкова време не е достоверно платено, поръчката се затваря като
+        „Изтекло“ и родителят получава писмо, че детето няма да има храна за тези дни (ако не се плати).</p>
+      </div>
+      <div class="card-soft">
+        <h3><i class="bi bi-6-circle text-primary"></i> Съмнителното отива при администрацията</h3>
+        <p class="mb-0">Когато банката каже „платено“, но сумата, валутата или видът на транзакцията не съвпадат,
+        или когато дойде късен успех, или има спор — системата <b>не пипа</b> плащането и праща вътрешно писмо до
+        <span class="mono">admin@e-stol.com</span>. Родителят в този момент вижда само „Плащането се проверява“.</p>
+      </div>
+      <div class="card-soft">
+        <h3><i class="bi bi-7-circle text-primary"></i> Родителят никога не трябва да плаща повторно</h3>
+        <p class="mb-0">Когато резултатът не е ясен, на екрана пише изрично „Не повтаряйте плащането“ и
+        „свържете се с администрацията“. Това е и най-важната защита срещу двойно плащане.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 2. ПОТОК ═══════════════════════════════════════ -->
+<section id="potok">
+  <div class="wrap">
+    <div class="sec-head"><div class="sec-num">2</div><h2>Пътят на едно плащане с карта</h2></div>
+    <p class="sec-sub">От момента, в който родителят натисне „Кредитна карта“, до окончателния край на поръчката.
+    Зелените кутии са успех, червените — отказ, жълтите — чакане и проверка.</p>
+
+    <div class="diagram">
+            <pre class="mermaid">
+flowchart TD
+  A["Родителят избира „Кредитна карта“ и потвърждава поръчката"] --> B["Създава се поръчка със статус „Очаква плащане“&lt;br/&gt;Веднага тръгва писмо „Създадена поръчка“"]
+  B --> C["Скрит екран — браузърът се прехвърля към Борика&lt;br/&gt;Номерът на поръчката се пази 24 часа"]
+  C --> D["Борика и банката на картата&lt;br/&gt;картодържателят въвежда карта, срок, CVV и парола"]
+  D --> E["Родителят се връща в e-stol.com&lt;br/&gt;заедно с отговора на банката"]
+  E --> F{"Подписът на отговора верен ли е&lt;br/&gt;и в рамките на 15 минути?"}
+  F -->|не| G["Екран „Плащането се проверява“&lt;br/&gt;Никой имейл не тръгва"]
+  F -->|да| H{"Какъв е кодът от банката?"}
+  H -->|"ACTION=0 и RC=00"| I["УСПЕХ — статус „Платено“&lt;br/&gt;екран „Плащането е успешно“&lt;br/&gt;писмо „Получено плащане“"]
+  H -->|"ACTION=2 или отказ"| J["ОТКАЗ — статус „Отказано плащане“&lt;br/&gt;екран „Плащането не бе извършено“&lt;br/&gt;писмо „Неуспешно плащане“"]
+  H -->|"още тече / неясно"| K["Нищо не се променя&lt;br/&gt;екран „Плащането се проверява“"]
+  I --> L["Автоматична проверка при Борика на всеки 5 минути&lt;br/&gt;до 24 часа от издаването на номера"]
+  J --> L
+  K --> L
+  G --> L
+  L --> M{"Какво казва банката?"}
+  M -->|"платено и всичко съвпада"| N["Статус „Платено“ + писмо до родителя"]
+  M -->|"отказано"| O["Статус „Отказано плащане“ + писмо до родителя"]
+  M -->|"съмнително"| P["Плащането не се пипа&lt;br/&gt;писмо само до администрацията"]
+  M -->|"след 24 часа нищо сигурно"| Q["Статус „Изтекло“ + писмо „Изтекло време за плащане“"]
+
+  classDef ok fill:#e8f7ef,stroke:#1f9d55,stroke-width:2px,color:#14532d
+  classDef bad fill:#fdecea,stroke:#c0392b,stroke-width:2px,color:#7f1d1d
+  classDef warn fill:#fdf6e3,stroke:#d99a2b,stroke-width:2px,color:#78350f
+  classDef info fill:#eef0ff,stroke:#4b53c8,stroke-width:2px,color:#2b2f6e
+  class I,N ok
+  class J,O bad
+  class G,K,M,P,Q warn
+  class A,B,C,D,E,F,H,L info
+      </pre>
+    </div>
+
+    <div class="note">
+      <b>Много важна подробност</b>
+      Между избори „карта“ и плащането родителят получава писмо <b>„Създадена поръчка“</b> — то тръгва още преди
+      той да е видял екрана на банката. Истинското потвърждение идва по-късно: писмото <b>„Получено плащане“</b>.
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 3. КОД ПО КОД ══════════════════════════════════ -->
+<section id="kodove">
+  <div class="wrap">
+    <div class="sec-head"><div class="sec-num">3</div><h2>Код по код — какво става във всяка ситуация</h2></div>
+    <p class="sec-sub">
+      Всеки код или група кодове, които банката може да върне, е описан по един и същ шаблон:
+      какво означава, какво решава системата, какъв остава статусът на плащането, кой екран вижда родителят,
+      какво се записва в базата, какви писма тръгват и какво следва след това.
+    </p>
+
+    <div class="legend">
+      <span><span class="dot" style="background:#1f9d55"></span> платено</span>
+      <span><span class="dot" style="background:#c0392b"></span> отказано</span>
+      <span><span class="dot" style="background:#d99a2b"></span> чака се / проверява се</span>
+      <span><span class="dot" style="background:#4b53c8"></span> служебно действие на системата</span>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-ok">УСПЕХ</span><span class="t">ACTION = 0 и RC = 00 — банката одобрява плащането</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво става</div><div class="v">Системата първо проверява, че номерът на поръчката е нейният, че отговорът е подписан правилно и че отговорът не е по-стар от 15 минути. После проверява, че сумата, валутата и видът на транзакцията съвпадат с поръчката. Само след това плащането се записва като платено.</div></div>
+        <div class="kv"><div class="k">Статус на плащането</div><div class="v"><span class="badge-soft b-ok">Платено</span> — от „Очаква плащане“ става „Платено“.</div></div>
+        <div class="kv"><div class="k">Екран за родителя</div><div class="v">„Плащането е успешно“ — зелена отметка, „Транзакцията през ПОС терминал на Борика бе одобрена.“, блок „Начин на плащане: Кредитна/Дебитна карта · Борика“ и бутон „Към началната страница“.</div></div>
+        <div class="kv"><div class="k">Запис в базата</div><div class="v">Плащането и транзакцията минават в „Платено“. Записва се още суровият отговор на банката, подписът и дали подписът е бил верен.</div></div>
+        <div class="kv"><div class="k">Писма</div><div class="v">До родителя: <b>„Получено плащане за поръчка …“</b> (шаблон „успешно плащане с карта“), с платената сума. Ако плащането е потвърдено от фоновата проверка, писмото е същото, но тръгва по-късно.</div></div>
+        <div class="kv"><div class="k">Ако сумата или валутата не съвпадат</div><div class="v">Плащането <b>не се пипа</b>, остава „Очаква плащане“, и тръгва вътрешно писмо до администрацията. Двойна предпазна мярка — така не може да се отбележи като платено нещо, което не е.</div></div>
+        <div class="kv"><div class="k">Какво следва</div><div class="v">Поръчката е приключена успешно. Никой повече не я проверява.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-bad">ОТКАЗ</span><span class="t">ACTION = 2 или положителен код на издателя, различен от 00 — банката отказва</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво става</div><div class="v">Щом ACTION е <span class="mono">2</span>, системата приема плащането за отказано, без да гледа повече подробности. Същото важи и при всеки положителен код от издателя (01, 05, 51, 54, 59 и т.н.) — те са окончателни.</div></div>
+        <div class="kv"><div class="k">Статус на плащането</div><div class="v"><span class="badge-soft b-bad">Отказано плащане</span> — парите, ако е ползвано натрупано салдо, се връщат по сметката на детето.</div></div>
+        <div class="kv"><div class="k">Екран за родителя</div><div class="v">„Вашето плащане не бе извършено успешно“ — „Банката не е одобрила плащането.“, списък с четири възможни причини и съвет да опита отново или да плати на място в стола, или в брой на каса на Изипей.</div></div>
+        <div class="kv"><div class="k">Запис в базата</div><div class="v">Плащането и транзакцията стават „Отказано плащане“. Записва се суровият отговор и подписът.</div></div>
+        <div class="kv"><div class="k">Писма</div><div class="v">До родителя: <b>„Неуспешно плащане“</b> (шаблон „плащането е отказано“) — с изричното уверение, че не е изтеглена никаква сума.</div></div>
+        <div class="kv"><div class="k">Какво следва</div><div class="v">Родителят може да направи нова поръчка. Поръчката вече не се проверява при Борика.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-bad">ОТКАЗ</span><span class="t">ACTION = 3 и RC = −19 — неуспешно разпознаване на картодържателя</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво става</div><div class="v">Картодържателят не е преминал проверката на банката (грешна парола за интернет банкиране, карта без 3D Secure, отказана автентикация). Системата приема това като отказ.</div></div>
+        <div class="kv"><div class="k">Статус / екран / база</div><div class="v">Като при всеки отказ: <span class="badge-soft b-bad">Отказано плащане</span>, екран „Вашето плащане не бе извършено успешно“, запис на суровия отговор.</div></div>
+        <div class="kv"><div class="k">Писма</div><div class="v">До родителя: <b>„Неуспешно плащане“</b> (същият шаблон като при отказ от банката).</div></div>
+        <div class="kv"><div class="k">Обяснение на екрана</div><div class="v">По този код системата има отделен текст: „Неуспешна автентикация — плащането не е извършено, направете ново плащане.“</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-bad">ОТКАЗ</span><span class="t">ACTION = 3 и RC = −25 — картодържателят сам отказва потвърждението</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво става</div><div class="v">Родителят е видял екрана на банката и е натиснал „отказ“ (например разпознал е, че не иска да плати, или е спрял процедурата). Плащането се третира като отказано.</div></div>
+        <div class="kv"><div class="k">Статус / екран / писма</div><div class="v"><span class="badge-soft b-bad">Отказано плащане</span> · екран „Вашето плащане не бе извършено успешно“ · писмо <b>„Неуспешно плащане“</b> до родителя.</div></div>
+        <div class="kv"><div class="k">Защо е важно</div><div class="v">Това е чисто човешко решение — затова и текстът на екрана е „Плащането е отказано от картодържателя.“</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-bad">ОТКАЗ</span><span class="t">ACTION = 3 и RC = −32 — дублиран отказ</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво става</div><div class="v">Банката съобщава, че вече е отказвала точно това плащане (например след повторен опит). Системата го приема като отказ.</div></div>
+        <div class="kv"><div class="k">Статус / екран / писма</div><div class="v"><span class="badge-soft b-bad">Отказано плащане</span> · червен екран „Вашето плащане не бе извършено успешно“ · писмо <b>„Неуспешно плащане“</b>.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-warn">ЧАКАНЕ</span><span class="t">ACTION = 3 и RC = −21 — банката вече има запис за тази транзакция</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво става</div><div class="v">Това най-често значи „докладът за плащането вече е получен веднъж“ или че плащането е в ход. Системата <b>не променя нищо</b> и не приема, че е платено.</div></div>
+        <div class="kv"><div class="k">Статус / екран</div><div class="v">Остава <span class="badge-soft b-warn">Очаква плащане</span> · екран „Плащането се проверява“ с текста „Банката вече има запис за тази транзакция. Не повтаряйте плащането; статусът се проверява.“</div></div>
+        <div class="kv"><div class="k">Писма</div><div class="v">До родителя — <b>нищо</b>. До администрацията — вътрешно писмо, че транзакцията изисква преглед.</div></div>
+        <div class="kv"><div class="k">Какво следва</div><div class="v">Плащането се довършва от фоновата проверка при Борика (тип 90). Ако проверката е изключена, плащането виси безкрайно и никой не получава второ писмо.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-warn">ЧАКАНЕ</span><span class="t">ACTION = 3 и RC = −31, −33 или −39 — още се обработва / чака се потвърждение</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво става</div><div class="v">Транзакцията е в процес на обработка (при издателя, при автентикация на клиента или чака изрично потвърждение). Това <b>не е отказ</b> и не е плащане — просто още не е ясно.</div></div>
+        <div class="kv"><div class="k">Статус / екран</div><div class="v">Остава <span class="badge-soft b-warn">Очаква плащане</span> · екран „Плащането се проверява“ („Не повтаряйте плащането, докато проверката не приключи.“)</div></div>
+        <div class="kv"><div class="k">Писма</div><div class="v">До родителя — нищо. Само запис в служебния дневник.</div></div>
+        <div class="kv"><div class="k">Какво следва</div><div class="v">Фоновата проверка пита банката отново (след поне 17 минути от началото), а ако до 24 часа резултатът е сигурен — плащането се довършва. Ако до 24 часа нищо не се изясни, поръчката се затваря.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-warn">ЧАКАНЕ → ОТКАЗ</span><span class="t">ACTION = 3 и RC = −40 — формата е отворена и недовършена</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво става</div><div class="v">Картодържателят е стигнал до екрана за потвърждение и още не го е завършил.</div></div>
+        <div class="kv"><div class="k">Ако е по-ново от 15 минути</div><div class="v">Третира се като „още тече“: <span class="badge-soft b-warn">Очаква плащане</span>, екран „Плащането се проверява“, без писмо до родителя.</div></div>
+        <div class="kv"><div class="k">Ако е по-старо от 15 минути</div><div class="v">Според правилата на Борика такова плащане се счита за неуспешно (изтекло време): <span class="badge-soft b-bad">Отказано плащане</span> и писмо <b>„Неуспешно плащане“</b> до родителя.</div></div>
+        <div class="kv"><div class="k">Защо точно 15 минути</div><div class="v">Това е „прозорецът на доверие“ на Борика (GUARDTIME). В него отрицателният отговор може още да се промени, затова системата не взема окончателно решение.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-info">ПРОВЕРКА</span><span class="t">ACTION = 3 и RC = −17 — отказ на достъпа до платежния сървър (проблем с подписа)</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво означава</div><div class="v">Най-често това е технически проблем с подписа или с това, че е изпратен същият номер на поръчка два пъти едновременно. Не е отказ от банката заради пари.</div></div>
+        <div class="kv"><div class="k">Статус / екран</div><div class="v">Плащането <b>не се пипа</b> — остава <span class="badge-soft b-warn">Очаква плащане</span> и родителят вижда „Плащането се проверява“.</div></div>
+        <div class="kv"><div class="k">Писма</div><div class="v">До родителя — нищо. До администрацията — вътрешно писмо с вид „отказан достъп“ (не се повтаря повече от веднъж на 24 часа).</div></div>
+        <div class="kv"><div class="k">Какво следва</div><div class="v">Фоновата проверка при Борика ще покаже истинския резултат, ако плащането действително е минало.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-warn">НЕЯСНО</span><span class="t">Всички останали кодове на Борика (−1 … −30 без изброените) и ACTION = 1, 7 или 21</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво става</div><div class="v">Системата не разпознава ситуацията като успех или като отказ — третира я като „неясно“. Това включва липсващо поле, грешка в сумата или валутата, грешка в идентификатора на търговеца, отказан IP адрес, стар TIMESTAMP (−20), необработваеми стойности (−24), „в момента се изпълнява друга транзакция на терминала“ (−16) и подобни.</div></div>
+        <div class="kv"><div class="k">Статус / екран</div><div class="v">Плащането остава <span class="badge-soft b-warn">Очаква плащане</span>, родителят вижда „Плащането се проверява“ с текст „Плащането не може да бъде потвърдено автоматично. Не плащайте повторно; свържете се с администрацията.“</div></div>
+        <div class="kv"><div class="k">Писма</div><div class="v">До родителя — нищо. Вътрешно писмо до администрацията тръгва само при код −17; при другите кодове остава само запис в служебния дневник.</div></div>
+        <div class="kv"><div class="k">Какво следва</div><div class="v">Същото като при „чакане“: фоновата проверка до 24 часа, после затваряне като „Изтекло“ (ако няма доказателство за плащане).</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-warn">ТЕХНИЧЕСКИ</span><span class="t">Отговорът е невалиден, подписът не пасва или отговорът е по-стар от 15 минути</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво става</div><div class="v">Системата отказва да приеме отговора за достоверен. Това е защитата срещу подправен или подменен отговор.</div></div>
+        <div class="kv"><div class="k">Статус / екран</div><div class="v">Плащането не се променя · родителят вижда „Плащането се проверява“ с текста „Плащането не може да бъде потвърдено автоматично…“</div></div>
+        <div class="kv"><div class="k">Писма</div><div class="v">До родителя — нищо. До администрацията — само ако фоновата проверка срещне същия проблем (код −17). При обикновено връщане на родителя само се пише в служебния дневник.</div></div>
+        <div class="kv"><div class="k">Какво следва</div><div class="v">Ако плащането е истинско, фоновата проверка ще го открие и ще го потвърди. Ако не, след 24 часа поръчката се затваря.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-warn">РЯДКО</span><span class="t">Номерът на поръчката съвпада с два различни записа (двусмислие)</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво става</div><div class="v">Всеки номер на поръчка е уникален за терминала 24 часа. Ако след изтичането на този срок случайно се генерира същият номер за друга поръчка, отговорът от банката може да сочи към две поръчки наведнъж.</div></div>
+        <div class="kv"><div class="k">Реакция на системата</div><div class="v">Отказва да реши към коя поръчка се отнася. Записва отговора, но <b>без</b> връзка към поръчка, връща „грешка“ и родителят вижда „Плащането се проверява“.</div></div>
+        <div class="kv"><div class="k">Писма / следва</div><div class="v">Никой не получава писмо — нито родителят, нито администрацията. Автоматичното затваряне също е изрично блокирано в такива случаи, за да не се изтече плащане, което може да е минало. Това е единственият случай, в който случаят остава невидим (вж. <a href="#propuski">Пропуски</a>).</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-warn">ЧАКАНЕ</span><span class="t">Родителят не се връща от банката (затворил е браузъра)</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво става</div><div class="v">Банката пази плащането като „формата е отворена“ до 24 часа. Нашето плащане остава в „Очаква плащане“ и никой не получава никакво писмо.</div></div>
+        <div class="kv"><div class="k">Какво следва</div><div class="v">Фоновата проверка пита Борика на всеки 5 минути. Ако плащането е било завършено — системата го потвърждава и родителят получава писмо. Ако не — след 24 часа поръчката става „Изтекло“ и родителят получава писмо, че времето е изтекло.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 4. РЕШЕНИЕТО ═══════════════════════════════════ -->
+<section id="resheniya">
+  <div class="wrap">
+    <div class="sec-head"><div class="sec-num">4</div><h2>Как системата решава по кода — една и съща логика навсякъде</h2></div>
+    <p class="sec-sub">
+      И когато родителят се връща от банката, и когато фоновата проверка пита Борика, се използва
+      <b>една и съща преценка</b>. Затова резултатът е един и същ, независимо по кой път е дошъл отговорът.
+    </p>
+
+    <div class="diagram">
+            <pre class="mermaid">
+flowchart TD
+  S["Отговорът от банката"] --> Q1{"ACTION = 0&lt;br/&gt;и RC = 00?"}
+  Q1 -->|да| R1["ПЛАТЕНО"]
+  Q1 -->|не| Q2{"ACTION = 2?"}
+  Q2 -->|да| R2["ОТКАЗАНО"]
+  Q2 -->|не| Q3{"RC е -19, -25 или -32?"}
+  Q3 -->|да| R2
+  Q3 -->|не| Q4{"RC = -40?"}
+  Q4 -->|"по-старо от 15 минути"| R2
+  Q4 -->|"по-ново от 15 минути"| R3["ОЩЕ ТЕЧЕ"]
+  Q4 -->|не| Q5{"RC е -21, -31,&lt;br/&gt;-33 или -39?"}
+  Q5 -->|да| R3
+  Q5 -->|не| R4["НЕЯСНО"]
+
+  classDef ok fill:#e8f7ef,stroke:#1f9d55,stroke-width:2px,color:#14532d
+  classDef bad fill:#fdecea,stroke:#c0392b,stroke-width:2px,color:#7f1d1d
+  classDef warn fill:#fdf6e3,stroke:#d99a2b,stroke-width:2px,color:#78350f
+  classDef info fill:#eef0ff,stroke:#4b53c8,stroke-width:2px,color:#2b2f6e
+  class R1 ok
+  class R2 bad
+  class R3,R4 warn
+  class S,Q1,Q2,Q3,Q4,Q5 info
+      </pre>
+    </div>
+
+    <div class="grid-3" style="margin-top:18px">
+      <div class="card-soft">
+        <h3><i class="bi bi-check2-circle" style="color:var(--ok)"></i> Платено</h3>
+        <p class="mb-0">Банката е одобрила <b>и</b> сумата, валутата и видът на транзакцията съвпадат. Плащането се записва като платено и родителят получава писмо.</p>
+      </div>
+      <div class="card-soft">
+        <h3><i class="bi bi-x-circle" style="color:var(--bad)"></i> Отказано</h3>
+        <p class="mb-0">Ясен отказ. Плащането се записва като отказано, салдото се връща и родителят получава писмо. Може да опита отново.</p>
+      </div>
+      <div class="card-soft">
+        <h3><i class="bi bi-hourglass-split" style="color:var(--warn)"></i> Още тече / неясно</h3>
+        <p class="mb-0">Нищо не се променя. Родителят вижда „Плащането се проверява“ и не трябва да плаща повторно. Решението се взема от проверката при Борика или от 24-часовото правило.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 5. ВРЕМЕ ═══════════════════════════════════════ -->
+<section id="vreme">
+  <div class="wrap">
+    <div class="sec-head"><div class="sec-num">5</div><h2>Време и чакане — какво се случва след всяка минута</h2></div>
+    <p class="sec-sub">Най-важното, което трябва да се знае: след като родителят плати, системата не чака той да направи нещо — тя сама проверява.</p>
+
+    <div class="card-soft">
+      <div class="tl">
+        <div class="tl-item">
+          <div class="tl-time">Минута 0</div>
+          <div class="tl-title">Поръчката се създава и родителят тръгва към банката</div>
+          <p class="mb-0">На поръчката се дава номер от 6 цифри, който се пази 24 часа, и родителят получава писмо „Създадена поръчка“.</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">Същата минута</div>
+          <div class="tl-title">Родителят плаща при Борика и се връща</div>
+          <p class="mb-0">Системата прочита отговора, проверява подписа и решава: платено, отказано или проверява се. Родителят веднага вижда съответния екран.</p>
+        </div>
+        <div class="tl-item warn">
+          <div class="tl-time">Първите 15 минути</div>
+          <div class="tl-title">Отрицателните отговори още не са окончателни</div>
+          <p class="mb-0">В рамките на 15 минути банката може да промени отговора си. Затова системата не бърза да съобщава отказ, когато кодът означава „още се обработва“.</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">Минута 17</div>
+          <div class="tl-title">Започва фоновата проверка</div>
+          <p class="mb-0">Системата изчаква поне 17 минути от началото (15 минути + 1 минута буфер) и едва тогава пита Борика за статуса — така резултатът вече е надежден. Проверката се повтаря на всеки 5 минути.</p>
+        </div>
+        <div class="tl-item warn">
+          <div class="tl-time">Всеки 5 минути</div>
+          <div class="tl-title">Питаме „какво стана с тази поръчка?“</div>
+          <p class="mb-0">Иска се с тип 90 и се проверява, че отговорът е за нашата поръчка и е подписан правилно. Ако банката каже „платено“ — плащането се потвърждава и родителят получава писмо. Ако каже „отказано“ — записва се отказ и тръгва писмо.</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">До 24 часа</div>
+          <div class="tl-title">Може да платиш и по-късно</div>
+          <p class="mb-0">Банката пази данните за поръчката 24 часа — толкова работи и номерът, и проверката. Ако родителят се върне и завърши плащането в този срок, всичко се обработва нормално.</p>
+        </div>
+        <div class="tl-item bad">
+          <div class="tl-time">След 24 часа</div>
+          <div class="tl-title">Окончателно решение</div>
+          <p class="mb-0">Ако няма сигурно плащане, поръчката се затваря като <b>„Изтекло“</b> и родителят получава писмо „Изтекло време за плащане“ — детето няма да има приготвена храна за тези дни (освен ако не се плати по друг начин). Ако има съмнение, че пари са изтеглени, плащането <b>не се затваря</b> — вместо това се праща вътрешно писмо до администрацията.</p>
+        </div>
+        <div class="tl-item ok">
+          <div class="tl-time">Без ограничение</div>
+          <div class="tl-title">Напомняния към администрацията</div>
+          <p class="mb-0">Ако възникне спор или съмнение, администрацията получава вътрешно писмо. Ако никой не се заеме, след около 24 часа идва напомняне с номер — и така, докато въпросът бъде решен ръчно.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="note warn">
+      <b>Ако фоновата проверка е изключена</b>
+      Тогава нито един от жълтите и червените етапи по-горе не се случва автоматично: нито се пита Борика,
+      нито поръчката се затваря след 24 часа. Плащането остава „Очаква плащане“ безкрайно,
+      освен ако родителят сам не го откаже. Това е най-важната настройка, която трябва да е включена.
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 6. ИМЕЙЛИ ══════════════════════════════════════ -->
+<section id="pisma">
+  <div class="wrap">
+    <div class="sec-head"><div class="sec-num">6</div><h2>Писмата — кой, кога и какво получава</h2></div>
+    <p class="sec-sub">Всички писма, свързани с плащания. Родителят вижда една част от тях, администрацията — друга.</p>
+
+    <div class="table-wrap">
+      <table class="doc">
+        <thead>
+          <tr><th>Писмо</th><th>Кога тръгва</th><th>До кого</th><th>Какво пише</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Създадена поръчка</b><br><span class="badge-soft b-info">карта / Изипей / стол</span></td>
+            <td>Веднага след като родителят потвърди поръчката — <b>преди</b> да е платил</td>
+            <td>Родителят (имейлът на потребителя)</td>
+            <td>„Успешно създадохте поръчка с номер … в e-stol.com“, крайна цена с ДДС, начин на плащане. За Изипей — 10-цифреният код за плащане.</td>
+          </tr>
+          <tr>
+            <td><b>Получено плащане</b><br><span class="badge-soft b-ok">успех с карта</span></td>
+            <td>Щом плащането се запише като платено — веднага след връщането от банката или по-късно от проверката</td>
+            <td>Родителят (търси се по транзакцията, после по поръчката, после в базата)</td>
+            <td>„Плащането за вашата поръчка с номер … е потвърдено“, платена сума, начин на плащане „Кредитна карта“.</td>
+          </tr>
+          <tr>
+            <td><b>Неуспешно плащане</b><br><span class="badge-soft b-bad">отказ с карта или Изипей</span></td>
+            <td>Щом плащането се запише като отказано — от банката, от Изипей или когато родителят сам прекрати поръчката</td>
+            <td>Родителят</td>
+            <td>„Не е изтеглена никаква сума от вашата банкова карта до момента.“ + четири възможни причини и съвет да опита отново или с друг метод.</td>
+          </tr>
+          <tr>
+            <td><b>Изтекло време за плащане</b><br><span class="badge-soft b-bad">поръчката се затваря</span></td>
+            <td>Когато поръчката стане „Изтекло“ — след 24 часа или когато Изипей върне изтекъл код</td>
+            <td>Родителят</td>
+            <td>„Времето за заплащане на вашата поръчка … е изтекло и за дните от тази поръчка вашето дете няма да има приготвена храна.“ + текущо салдо.</td>
+          </tr>
+          <tr>
+            <td><b>Транзакция изисква ръчен преглед</b><br><span class="badge-soft b-warn">само вътрешно</span></td>
+            <td>При съмнение: сума/валута/вид не съвпадат, късен успех, спор, проблем с подписа</td>
+            <td>Само <span class="mono">admin@e-stol.com</span></td>
+            <td>Транзакция, плащане, терминал, номер на поръчката, статус и причина. При повторение се добавя „напомняне №…“.</td>
+          </tr>
+          <tr>
+            <td><b>Платена поръчка на каса в стол</b><br><span class="badge-soft b-ok">успех на каса</span></td>
+            <td>Когато служител в стол потвърди плащане</td>
+            <td>Потребителят на детето</td>
+            <td>„Плащането за вашата поръчка … е потвърдено“, начин на плащане „На каса в стол“.</td>
+          </tr>
+          <tr>
+            <td><b>Сторниране на платен ден</b><br><span class="badge-soft b-info">връщане на пари по салдо</span></td>
+            <td>Когато вече платен ден бъде отменен</td>
+            <td>Потребителят на детето</td>
+            <td>„Вече заплатената поръчка за … беше сторнирана“, сумата се добавя към салдото на детето.</td>
+          </tr>
+          <tr>
+            <td><b>Изплащане на салдо в брой</b><br><span class="badge-soft b-info">връщане на пари</span></td>
+            <td>Когато натрупаното салдо се изплаща на родителя в брой</td>
+            <td>Родителят</td>
+            <td>Потвърждение, че салдото е изплатено в брой, с изплатената сума.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid-2" style="margin-top:16px">
+      <div class="note">
+        <b>Скрито копие до вътрешен адрес</b>
+        Всяко писмо, което се прави по готов шаблон, тихо получава скрито копие до <span class="mono">cc@e-stol.com</span>.
+        Така вътрешен архив вижда всичко, което е тръгнало към родителите.
+      </div>
+      <div class="note warn">
+        <b>Вътрешните адреси не получават писма</b>
+        Има защита: писмо, чийто получател е адрес в <span class="mono">@e-stol.com</span> и не е точно
+        <span class="mono">admin@e-stol.com</span>, се <b>изхвърля без съобщение</b>. Това е направено, за да не се пращат писма
+        към вътрешни адреси по погрешка — но означава, че ако някой ден се зададе служебен адрес като получател,
+        писмото тихо ще изчезне.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 7. ЕКРАНИ ══════════════════════════════════════ -->
+<section id="ekrani">
+  <div class="wrap">
+    <div class="sec-head"><div class="sec-num">7</div><h2>Екраните, които вижда родителят при плащане с карта</h2></div>
+    <p class="sec-sub">Три екрана — и само единият от тях се вижда при нормално плащане.</p>
+
+    <div class="grid-3">
+      <div class="card-soft">
+        <span class="badge-soft b-neutral">екран 1</span>
+        <h3 class="mt-2">Пренасочване към банката</h3>
+        <p>Невидим екран: всички данни за плащането се изпращат към Борика и браузърът веднага се прехвърля нататък.
+        Родителят не вижда нищо, освен ако интернетът му е бавен.</p>
+        <p class="mb-0"><b>Какво НЕ вижда:</b> никакви данни за картата — те се въвеждат при банката.</p>
+      </div>
+      <div class="card-soft" style="border-color:#bfe6cf">
+        <span class="badge-soft b-ok">екран 2 · успех</span>
+        <h3 class="mt-2">„Плащането е успешно“</h3>
+        <p>Зелена отметка, „Транзакцията през ПОС терминал на Борика бе одобрена.“, начин на плащане
+        „Кредитна/Дебитна карта · Борика“ и бутон „Към началната страница“.</p>
+        <p class="mb-0">Това е екранът при <b>платено</b>.</p>
+      </div>
+      <div class="card-soft" style="border-color:#f2c9c4">
+        <span class="badge-soft b-bad">екран 3 · отказ</span>
+        <h3 class="mt-2">„Вашето плащане не бе извършено успешно“</h3>
+        <p>„Банката не е одобрила плащането.“, четири възможни причини и съвет да опита отново или да плати
+        на място в стола, или в брой на каса на Изипей.</p>
+        <p class="mb-0">Това е екранът при <b>отказано</b>.</p>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top:16px">
+      <div class="card-soft" style="border-color:#f0d9a8">
+        <span class="badge-soft b-warn">екран 4 · проверява се</span>
+        <h3 class="mt-2">„Плащането се проверява“</h3>
+        <p>Жълта икона на часовник, „Резултатът от плащането се проверява. Не повтаряйте плащането, докато проверката не приключи.“
+        и текст „Не започвайте ново плащане, докато резултатът не бъде проверен.“</p>
+        <p class="mb-0">Това е екранът при <b>неясно, чакане, съмнение или технически проблем</b>. Той е и най-честият източник на въпроси от родители,
+        защото на него не пише какво ще се случи по-нататък и по какво да се разбере, че е приключило.</p>
+      </div>
+      <div class="card-soft">
+        <span class="badge-soft b-neutral">забележка</span>
+        <h3 class="mt-2">Няма екран „провери резултата“</h3>
+        <p class="mb-0">Родителят не може да отвори конкретна поръчка и да види какво е станало с плащането по нея.
+        Вижда общия статус в списъка с поръчки, но не и историята „казано е на банката, отговорът беше такъв, проверено е в този час“.
+        Затова единственото, което може да направи при жълт екран, е да изчака писмо или да се обади на администрацията.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 8. БАЗА ════════════════════════════════════════ -->
+<section id="baza">
+  <div class="wrap">
+    <div class="sec-head"><div class="sec-num">8</div><h2>Какво се записва в базата — на прост език</h2></div>
+    <p class="sec-sub">Шест състояния на плащането и няколко помощни записа. Нищо сложно — важно е кое кога се използва.</p>
+
+    <div class="table-wrap">
+      <table class="doc">
+        <thead><tr><th>Състояние</th><th>Какво значи</th><th>Кой го задава</th></tr></thead>
+        <tbody>
+          <tr><td><b>Очаква плащане</b></td><td>Поръчката е създадена, но нищо не е платено</td><td>Начално състояние — при създаване на всяка поръчка</td></tr>
+          <tr><td><b>Платено</b></td><td>Плащането е потвърдено</td><td>Борика (при успех), Изипей, служител в стол, плащане само със салдо</td></tr>
+          <tr><td><b>Отказано плащане</b></td><td>Банката е отказала или родителят е спрял плащането</td><td>Борика, Изипей, самият родител</td></tr>
+          <tr><td><b>Изтекло</b></td><td>Времето за плащане е изтекло и поръчката се затваря</td><td>Изипей и 24-часовото правило при Борика</td></tr>
+          <tr><td><b>Отказано</b></td><td>Поръчката е отказана/анулирана преди плащане</td><td>Анулиране на чакаща поръчка</td></tr>
+          <tr><td><b>Сторнирано</b></td><td>Плащането е върнато обратно</td><td><b>Никой</b> — състоянието е определено, но днес никъде не се използва</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid-3" style="margin-top:18px">
+      <div class="card-soft">
+        <h3><i class="bi bi-hash"></i> Номер на поръчката</h3>
+        <p class="mb-0">Шестцифрен номер, който се дава на всяка поръчка преди плащане. Уникален е за терминала в рамките на 24 часа —
+        това е номерът, по който банката разпознава плащането. Ако родителят се върне да плаща, използва се същият номер.</p>
+      </div>
+      <div class="card-soft">
+        <h3><i class="bi bi-file-earmark-lock"></i> Отговорът от банката</h3>
+        <p class="mb-0">За всяко плащане се записва какво точно е отговорила банката, подписът и дали подписът е бил верен.
+        Това е следата, по която може да се проследи всеки случай по-късно.</p>
+      </div>
+      <div class="card-soft">
+        <h3><i class="bi bi-bell"></i> Служебните сигнали</h3>
+        <p class="mb-0">Когато нещо е съмнително, се създава служебен запис: какъв е проблемът, кой терминал и номер, пратен ли е имейл,
+        колко пъти е опитвано и каква е била последната грешка. Тези записи <b>не се виждат в административния панел</b> —
+        съществуват само в базата и в пощата.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 9. РЕЧНИК ══════════════════════════════════════ -->
+<section id="rechnik">
+  <div class="wrap">
+    <div class="sec-head"><div class="sec-num">9</div><h2>Речник на всички кодове, които банката може да върне</h2></div>
+    <p class="sec-sub">
+      Пълен списък от документацията на Борика: служебните кодове на самата Борика и кодовете, които идват от банката на картата.
+      Третата колона показва как ги третира нашата система.
+    </p>
+
+    <div class="searchbar">
+      <input id="codeSearch" type="search" placeholder="Търсене по код или по дума (например: 51, отказана, автентикация, -40)…" aria-label="Търсене в кодовете">
+      <button class="btn-soft ghost" type="button" onclick="document.getElementById('codeSearch').value='';document.getElementById('codeSearch').dispatchEvent(new Event('input'));">
+        <i class="bi bi-x-circle"></i> Изчисти
+      </button>
+      <button class="btn-soft" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Печат / PDF</button>
+    </div>
+
+    <h3 class="mt-4 mb-2">А. Кодове за самото действие (ACTION)</h3>
+    <div class="table-wrap">
+      <table class="doc" id="codeTableA">
+        <thead><tr><th style="width:110px">Код</th><th>Какво означава по документ</th><th>Как го третира системата</th></tr></thead>
+        <tbody>
+          <tr><td class="mono"><b>0</b></td><td>Успешно изпълнена транзакция</td><td>Ако и резултатът е 00 → <span class="badge-soft b-ok">платено</span>, иначе → неясно/чакане</td></tr>
+          <tr><td class="mono"><b>1</b></td><td>Дублирана транзакция</td><td><span class="badge-soft b-warn">чакане</span> — плащането не се пипа</td></tr>
+          <tr><td class="mono"><b>2</b></td><td>Отказана транзакция</td><td><span class="badge-soft b-bad">отказ</span> + писмо до родителя</td></tr>
+          <tr><td class="mono"><b>3</b></td><td>Грешка / отговорът не е успешен — решава се по кода за резултат</td><td>Гледа се кодът за резултат (по-долу)</td></tr>
+          <tr><td class="mono"><b>7</b></td><td>Дублирана транзакция при неуспешна автентикация</td><td><span class="badge-soft b-warn">чакане</span></td></tr>
+          <tr><td class="mono"><b>21</b></td><td>Отказ тип „Soft Decline“ — банката иска повторен опит</td><td><span class="badge-soft b-warn">неясно</span> — системата не повтаря автоматично</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="mt-4 mb-2">Б. Служебни кодове на Борика (кодове за резултат със знак минус)</h3>
+    <div class="table-wrap">
+      <table class="doc" id="codeTableB">
+        <thead><tr><th style="width:110px">Код</th><th>Какво означава по документ</th><th>Как го третира системата</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">−1</td><td>Липсва задължително поле</td><td><span class="badge-soft b-warn">неясно</span> — само запис в дневника</td></tr>
+          <tr><td class="mono">−2</td><td>Некоректно име или стойност на поле</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−3</td><td>Авторизационният хост не отговаря или е с неправилен формат</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−4</td><td>Няма връзка с авторизационния хост</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−5</td><td>Грешка във връзката по време на обработка</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−6</td><td>Грешка в конфигурацията на платежния вход на Борика</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−7</td><td>Неправилен формат на отговора от хоста</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−10</td><td>Грешка в полето „Сума“</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−11</td><td>Грешка в полето „Валута“</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−12</td><td>Грешка в идентификатора на търговеца</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−13</td><td>Неправилен IP адрес на търговеца</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−15</td><td>Грешка в полето „RRN“</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−16</td><td>В момента се изпълнява друга транзакция на същия терминал</td><td><span class="badge-soft b-warn">неясно</span> — не се отказва, чака се</td></tr>
+          <tr><td class="mono">−17</td><td>Отказан достъп до платежния сървър (грешка при проверка на подписа)</td><td><span class="badge-soft b-warn">чакане</span> + вътрешно писмо до администрацията (най-много веднъж на 24 ч)</td></tr>
+          <tr><td class="mono">−19</td><td>Грешка в искането за автентикация или неуспешна автентикация</td><td><span class="badge-soft b-bad">отказ</span> + писмо до родителя</td></tr>
+          <tr><td class="mono">−20</td><td>Надвишена разлика между часа на заявката и часа на Борика (над 15 минути)</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−21</td><td>Транзакцията вече е била изпълнена</td><td><span class="badge-soft b-warn">чакане</span> + вътрешно писмо (спор)</td></tr>
+          <tr><td class="mono">−22</td><td>Невалидни данни за автентикация</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−23</td><td>Невалиден контекст (липсва българско описание)</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−24</td><td>Стойностите са необработваеми — различна валута или транзакция, по-стара от 24 часа</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−25</td><td>Допълнителното потвърждение е отказано от картодържателя</td><td><span class="badge-soft b-bad">отказ</span> + писмо до родителя</td></tr>
+          <tr><td class="mono">−26</td><td>Невалиден идентификатор на картата (BIN)</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−27</td><td>Невалидно име на търговеца</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−28</td><td>Невалидно допълнително поле (номер на поръчката към Борика)</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−29</td><td>Невалиден отговор от системата за 3D Secure проверка</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−30</td><td>Отказана транзакция (съмнение за измама)</td><td><span class="badge-soft b-warn">неясно</span></td></tr>
+          <tr><td class="mono">−31</td><td>В процес на обработка</td><td><span class="badge-soft b-warn">чакане</span></td></tr>
+          <tr><td class="mono">−32</td><td>Дублирана отказана транзакция</td><td><span class="badge-soft b-bad">отказ</span> + писмо до родителя</td></tr>
+          <tr><td class="mono">−33</td><td>В процес на автентикация на картодържателя</td><td><span class="badge-soft b-warn">чакане</span></td></tr>
+          <tr><td class="mono">−39</td><td>Искане за потвърждаване на клиента</td><td><span class="badge-soft b-warn">чакане</span></td></tr>
+          <tr><td class="mono">−40</td><td>В процес на обработка (формата за потвърждение е отворена)</td><td>До 15 минути → <span class="badge-soft b-warn">чакане</span>; след 15 минути → <span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="mt-4 mb-2">В. Кодове, които идват от банката на картата (положителни кодове за резултат)</h3>
+    <div class="table-wrap">
+      <table class="doc" id="codeTableC">
+        <thead><tr><th style="width:110px">Код</th><th>Какво означава по документ</th><th>Как го третира системата</th></tr></thead>
+        <tbody>
+          <tr><td class="mono"><b>00</b></td><td>Успешно приключила транзакция</td><td><span class="badge-soft b-ok">платено</span> (само ако и ACTION е 0)</td></tr>
+          <tr><td class="mono">01</td><td>Обърнете се към банката, издала картата</td><td><span class="badge-soft b-bad">отказ</span> + писмо до родителя</td></tr>
+          <tr><td class="mono">04</td><td>Задръжте картата (картата се изземва)</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">05</td><td>Не се признава / не се одобрява</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">06</td><td>Грешка</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">12</td><td>Невалидна транзакция</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">13</td><td>Невалидна сума</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">14</td><td>Няма такава карта</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">15</td><td>Няма такава банка издател</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">17</td><td>Отказ от страна на клиента</td><td><span class="badge-soft b-bad">отказ</span> + писмо („Плащането е отказано от вас.“)</td></tr>
+          <tr><td class="mono">30</td><td>Грешка във формата</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">35</td><td>Изземване на картата</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">36</td><td>Ограничена карта</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">37</td><td>Обадете се на службата за сигурност на банката</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">38</td><td>Превишен брой опити за ПИН</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">39</td><td>Няма кредитна сметка</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">40</td><td>Функцията не се поддържа</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">41</td><td>Изгубена карта</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">42</td><td>Няма универсална сметка</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">43</td><td>Открадната карта</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">54</td><td>Изтекла карта</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">55</td><td>Грешен ПИН</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">56</td><td>Няма запис за картата</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">57</td><td>Транзакцията не е разрешена за картодържателя</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">58</td><td>Транзакцията не е разрешена за терминала (терминалът не е активиран при Борика)</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">59</td><td>Съмнение за измама</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">85</td><td>Няма причина за отказ — валидна транзакция</td><td><span class="badge-soft b-bad">отказ</span> по кода (особеност на документацията)</td></tr>
+          <tr><td class="mono">88</td><td>Криптографска грешка</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">89</td><td>Неуспешна автентикация</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">91</td><td>Банката издател не работи</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">95</td><td>Грешка при съгласуване — авторизацията не е намерена</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+          <tr><td class="mono">96</td><td>Системна неизправност</td><td><span class="badge-soft b-bad">отказ</span> + писмо</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <b>Защо положителните кодове винаги са окончателни</b>
+      Според документацията на Борика всички положителни кодове, различни от 00, са окончателни — не се правят допълнителни
+      проверки. Затова и системата не се опитва да ги „спасява“: записва отказ и уведомява родителя.
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 10. ПРОПУСКИ ═══════════════════════════════════ -->
+<section id="propuski">
+  <div class="wrap">
+    <div class="sec-head"><div class="sec-num">10</div><h2>Пропуски, кодове, които не се обработват, и забележки</h2></div>
+    <p class="sec-sub">
+      Това не е списък с грешки, а списък с места, където днешното поведение може да изненада някого.
+      Подредени са по важност.
+    </p>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-bad">ВАЖНО</span><span class="t">Автоматичната проверка при Борика е изключена по подразбиране</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво значи</div><div class="v">Докато проверката не се включи изрично, системата <b>никога</b> не пита Борика „какво стана с тази поръчка“ и <b>никога</b> не затваря поръчка след 24 часа автоматично.</div></div>
+        <div class="kv"><div class="k">Последица</div><div class="v">Всички случаи на „чакане“ и „неясно“ (жълтите екрани) остават отворени безкрайно. Родителят вижда „Плащането се проверява“ и никога не научава как е свършило. Ако банката беше отказала плащането междувременно, родителят също не разбира.</div></div>
+        <div class="kv"><div class="k">Какво да се направи</div><div class="v">Проверката трябва да е включена в продукция. Тя е и единственият механизъм, който „спасява“ плащане, при което родителят е затворил браузъра, и единственият, който затваря изтеклите поръчки при карта.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-warn">ВАЖНО</span><span class="t">Няма административен екран за служебните сигнали</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво значи</div><div class="v">Сигналите за съмнителни транзакции съществуват само като записи в базата и като писма до <span class="mono">admin@e-stol.com</span>. Няма страница в административния панел, на която да се види списък: кои плащания чакат решение, кои са решени, кои са забравени.</div></div>
+        <div class="kv"><div class="k">Последица</div><div class="v">Ако писмото се изгуби или не се види, спорно плащане може да остане нерешено без никой да разбере от системата. Проверката на състоянието изисква поглед в базата.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-warn">ЗАБЕЛЕЖКА</span><span class="t">Случаят с двусмислен номер на поръчката остава невидим</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво значи</div><div class="v">Ако два записа имат един и същ номер на поръчка (възможно е само след като 24-часовият срок на първия е изтекъл), системата отказва да реши и <b>не съобщава на никого</b> — нито на родителя, нито на администрацията. Автоматичното затваряне също е блокирано, за да не се затвори плащане, което може да е минало.</div></div>
+        <div class="kv"><div class="k">Последица</div><div class="v">Плащането виси в „Очаква плащане“ без никаква следа за човек. Случаят е много рядък, но е единственият, при който не се праща писмо до администрацията.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-warn">ЗАБЕЛЕЖКА</span><span class="t">Какво чака родителят и как разбира, че е приключило</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво значи</div><div class="v">При „чакане“ и „неясно“ родителят вижда жълт екран, но на него не пише какво ще се случи, за колко време и как да разбере резултата. Няма и страница, на която по-късно да отвори конкретната поръчка и да види какво е станало.</div></div>
+        <div class="kv"><div class="k">Последица</div><div class="v">Ако всичко мине добре, родителят получава писмо „Получено плащане“ и разбира. Ако не — единствената му възможност е да се обади на администрацията.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-info">ПО ДИЗАЙН</span><span class="t">Напомнянията към администрацията се повтарят без край</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво значи</div><div class="v">Ако дадено съмнително плащане не бъде решено, на всеки около 24 часа се създава нов запис и се праща ново писмо с „напомняне №…“. Няма ограничение колко пъти може да се повтори.</div></div>
+        <div class="kv"><div class="k">Защо е така</div><div class="v">Това е умишлено — идеята е въпросът да не бъде забравен. Цената е, че при дълго нерешен случай администрацията получава по едно писмо всеки ден.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-info">ПО ДИЗАЙН</span><span class="t">Ако съмнителното плащане съществува, поръчката никога не се затваря автоматично</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво значи</div><div class="v">Когато има запис за спор, късен успех, неверифициран отговор или код −21, 24-часовото правило се отказва да затвори поръчката — дори да е изтекло времето. Вместо това само напомня на администрацията.</div></div>
+        <div class="kv"><div class="k">Защо е добре</div><div class="v">Така не се случва дете да остане без храна, при положение че пари може вече да са изтеглени. Лошото е, че без административен екран решението зависи изцяло от пощата.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-neutral">ДРЕБНА</span><span class="t">Писмото-напомняне спира след пет неуспешни опита</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво значи</div><div class="v">Ако изпращането на вътрешно писмо се провали пет пъти (с опити след 1, 5, 15 и 60 минути), сигналът се отбелязва като окончателно неуспешен и повече не се опитва. Остава запис в дневника.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-neutral">ДРЕБНА</span><span class="t">Състояние „Сторнирано“ съществува, но не се използва</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво значи</div><div class="v">В системата има състояние за сторнирано плащане, но при плащанията с карта никъде не се използва — връщането на пари се отразява като салдо по акаунта на детето.</div></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-head"><span class="badge-soft b-neutral">ДРЕБНА</span><span class="t">Част от кодовете се обясняват на родителя с общ текст</span></div>
+      <div class="grp-body">
+        <div class="kv"><div class="k">Какво значи</div><div class="v">За кодовете, за които няма специално описание, родителят вижда „Плащането не е извършено (код …)“. Това е коректно, но не е полезно за човек, който не знае какво значи кодът.</div></div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top:22px">
+      <div class="card-soft" style="border-color:#bfe6cf">
+        <h3><i class="bi bi-check2-circle" style="color:var(--ok)"></i> Какво е направено добре</h3>
+        <ul class="tight mb-0">
+          <li>Отговорът от банката се проверява по подпис и по време — не може да се подправи.</li>
+          <li>Сума, валута и вид транзакция се проверяват преди да се приеме плащане.</li>
+          <li>Една и съща преценка се използва и при връщане от банката, и при фоновата проверка — няма разминаване.</li>
+          <li>Съмнителното не се „наглася“ към успех — отива при администрация.</li>
+          <li>Ако има съмнение за изтеглени пари, поръчката не се затваря автоматично.</li>
+          <li>Едни и същи сигнали не се пращат повторно в рамките на 24 часа.</li>
+          <li>Писмата до родителя съдържат ясно указание да не се плаща повторно при неяснота.</li>
+        </ul>
+      </div>
+      <div class="card-soft" style="border-color:#f0d9a8">
+        <h3><i class="bi bi-exclamation-triangle" style="color:var(--warn)"></i> Три неща, които биха помогнали най-много</h3>
+        <ul class="tight mb-0">
+          <li><b>Включване на фоновата проверка в продукция</b> — без нея всички чакащи случаи остават отворени и без финално писмо.</li>
+          <li><b>Административен екран за сигналите</b> — списък с чакащите решения, за да не зависи всичко от поща.</li>
+          <li><b>Начин родителят да провери резултата</b> — поне един екран „какво стана с това плащане“, вместо обаждане.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ИЗТОЧНИЦИ ══════════════════════════════════════ -->
+<section id="iztochnici">
+  <div class="wrap">
+    <div class="sec-head"><div class="sec-num">11</div><h2>Откъде е взето всичко това</h2></div>
+    <p class="sec-sub">За проследимост — ако някой ден трябва да се провери конкретно твърдение, ето къде живее истината.</p>
+
+    <div class="grid-2">
+      <div class="card-soft">
+        <h3>Документация</h3>
+        <ul class="tight mb-0">
+          <li>Официална документация на Борика — <span class="mono">Borica APGW P-OM-41 v5.0 / 29.05.2024</span> (описание на протокола, кодове, срокове, правила за подпис).</li>
+          <li>Български текстове, които родителят вижда — <span class="mono">src/EStol.Domain/Web/BoricaStatusTexts.cs</span>.</li>
+        </ul>
+      </div>
+      <div class="card-soft">
+        <h3>Код (само прочетен, нищо не е променяно)</h3>
+        <ul class="tight mb-0">
+          <li>Обработка на връщането от банката — <span class="mono">src/EStol.Application/Services/PaymentGateways/BoricaPaymentGateway.cs</span></li>
+          <li>Фоновата проверка и 24-часовото правило — <span class="mono">src/EStol.Application/Services/Borica/BoricaStatusReconciler.cs</span> и <span class="mono">BoricaStatusCheckWorker.cs</span></li>
+          <li>Преценката по кодове — <span class="mono">src/EStol.Application/Services/Borica/BoricaTransactionDecision.cs</span></li>
+          <li>Екраните и текстовете — <span class="mono">src/EStol.Web/Controllers/PaymentsController.cs</span>, <span class="mono">Views/Payments/BoricaResult.cshtml</span></li>
+          <li>Писмата и статусите — <span class="mono">src/EStol.Application/Services/PaymentService.cs</span>, <span class="mono">MailSender.cs</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="mb-2">
+      <i class="bi bi-info-circle"></i> Докладът описва какво прави системата <b>в момента</b>. Не е преглед на код,
+      не търси грешки и не предлага промени — това е снимка на текущото поведение, направена по заявка.
+    </p>
+    <p class="mb-0">
+      Плащания с карта през Борика · e-stol.com · 6 октомври 2026 г. · Изготвено от екипа по интеграцията.
+    </p>
+  </div>
+</footer>
+
+<script>
+  // Търсене в речника на кодовете — филтрира редовете във всичките три таблици.
+  (function(){
+    var input = document.getElementById('codeSearch');
+    var rows = document.querySelectorAll('#codeTableA tbody tr, #codeTableB tbody tr, #codeTableC tbody tr');
+    var headers = document.querySelectorAll('#rechnik h3');
+    function apply(){
+      var q = (input.value || '').trim().toLowerCase();
+      var visible = 0;
+      rows.forEach(function(tr){
+        var hit = q === '' || tr.textContent.toLowerCase().indexOf(q) !== -1;
+        tr.style.display = hit ? '' : 'none';
+        if (hit) visible++;
+      });
+      headers.forEach(function(h){ h.style.opacity = q && visible === 0 ? '.4' : '1'; });
+    }
+    input.addEventListener('input', apply);
+  })();
+
+  // Диаграмите — светла тема, без анимации при печат.
+  if (window.mermaid) {
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      themeVariables: {
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        primaryColor: '#eef0ff',
+        primaryBorderColor: '#4b53c8',
+        primaryTextColor: '#1b2333',
+        lineColor: '#9aa3b8',
+        tertiaryColor: '#f7f9fc'
+      },
+      flowchart: { curve: 'basis', useMaxWidth: true, nodeSpacing: 34, rankSpacing: 44 }
+    });
+  }
+</script>
+</body>
+</html>
